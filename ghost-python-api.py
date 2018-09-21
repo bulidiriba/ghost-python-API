@@ -1,3 +1,5 @@
+__author__ = 'brook, amante and simon'
+
 import subprocess as sp
 import os
 import sys
@@ -11,10 +13,16 @@ class whole:
 		self.len_of_output_from_guile = []
 
 	def takeInput(self):
+
+		# starting the relex server
 		if (self.isRelex == False):
 			self.startRelex()
 			self.isRelex = True
+
+		# starting and cummunicating with the Guile
 		self.startGuile()
+
+		# asking the user continously for what he is looking for
 		while(True):
 			value = input("Please enter your rule or '(quit)' to exit: ")
 			if(value == "(quit)"):
@@ -23,6 +31,8 @@ class whole:
 					raise SystemExit
 				elif found == "N" or found == "n":
 					self.ghostRule(value.encode())
+
+			# processing the question of user to cummunicate it with Guile
 			self.ghostRule(value.encode())
 
 
@@ -32,6 +42,8 @@ class whole:
 		try:
 			os.chdir("/home/aman/relex/")
 			os.system("gnome-terminal -e 'bash -c \"./opencog-server.sh; exec bash\"'")
+			#sp.call("gnome-terminal --command ='./home/aman/relex/opencog-server.sh'", shell=True)
+			#sp.call('sudo docker run -it -p 4444:4444 opencog/relex /bin/sh opencog-server.sh', shell=True)
 			print("Relex Server opened successfully")
 		except Exception as e:
 			print("Error occured in opening relex server", e)
@@ -39,49 +51,48 @@ class whole:
 		# if it is using docker
 	    #subprocess.call('sudo docker run -it -p 4444:4444 opencog/relex /bin/sh opencog-server.sh', shell=True)
 
-
 	def startRelex2(self):
-		pass
-		# a = [1,2,3,4,5]
-		# os.chdir("/home/aman/relex/")
-		#
-		# return_code = sp.call("gnome-terminal --command ='./opencog-server.sh'", shell = True)
+		a = [1,2,3,4,5]
+		os.chdir("/home/aman/relex/")
+		return_code = sp.call("gnome-terminal --command ='./opencog-server.sh'", shell = True)
 
-		
+
 	def startGuile(self):
-	#def startGuile():
 		print("--------------------starting GUILE--------------")
 		self.proc = sp.Popen('guile' , stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT)
-		#self.proc = self.newPopen(sp.PIPE)
-		#self.proc = sp.Popen('guile', stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, bufsize=1, universal_newlines=True)
-		#self.proc = sp.check_call('guile')
-
+		# self.proc = self.newPopen(sp.PIPE)
+		# self.proc = sp.Popen('guile', stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT, bufsize=1, universal_newlines=True)
+		# self.proc = sp.check_call('guile')
+		#
 		# try:
 		# 	output, error = self.proc.communicate(timeout=20)
 		# except:
 		# 	self.proc.kill()
 		# 	output, error = self.proc.communicate()
-
-		#a = proc.communicate(input=None)
-		
+		#
+		# a = proc.communicate(input=None)
+		#
 		try:
 			a = self.proc.stdout.readline()
 			if("GNU Guile" in a.decode()):
 				print("guile successfully opened")
+
 			else:
 				print("there is a problem with guile")
+				exit(0)
 		except Exception as e:
 			print("Error Occured in starting guile: ", e)
 
-		# print(type(a))
-		#print(a)
+
+
+		# loading modules
 		try:
 			module = b"""
 						(use-modules(opencog)
 						(opencog nlp)
 						(opencog nlp relex2logic)
 						(opencog openpsi)
-						(opencog ghost) 
+						(opencog ghost)
 						(opencog ghost procedures))"""
 			self.proc.stdin.write(module)
 			# print(type(h))
@@ -89,21 +100,21 @@ class whole:
 		except Exception as e:
 			#print("problem occured while trying to load modules ")
 			print("Error Occured in loading module: ", e)
-		
+
 		try:
 			code = b"""
 					(ghost-parse "u: (hello) hi there")
 					"""
 			self.proc.stdin.write(code)
-			#print(self.proc.stdout())
+			print(self.proc.stdout.readline())
 			test = b"""
 					(map cog-name (test-ghost "hello"))
 					"""
 			g = self.proc.stdin.write(test)
 			print("Test completed successfully!")
+			#print(self.proc.communicate())
 		except Exception as e:
 			print("Error Occured in testing rule: ", e)
-		#print(proc.communicate())
 
 
 	def displayPopen(self):
@@ -111,20 +122,18 @@ class whole:
 		try:
 			a = disp.stdout.readline()
 			if("GNU Guile" in a.decode()):
-				#print("guile successfully opened")
 				pass
 			else:
 				print("there is a problem with guile")
 		except Exception as e:
 			print("Error Occured in starting guile: ", e)
-
 		try:
 			module = b"""
 						(use-modules(opencog)
 						(opencog nlp)
 						(opencog nlp relex2logic)
 						(opencog openpsi)
-						(opencog ghost) 
+						(opencog ghost)
 						(opencog ghost procedures))"""
 			disp.stdin.write(module)
 			# print(type(h))
@@ -132,6 +141,21 @@ class whole:
 		except Exception as e:
 			# print("problem occured while trying to load modules ")
 			print("Error Occured in loading module: ", e)
+
+		try:
+			code = b"""
+					(ghost-parse "u: (hello) hi there")
+					"""
+			disp.stdin.write(code)
+			#print(self.proc.stdout())
+			test = b"""
+					(map cog-name (test-ghost "hello"))
+					"""
+			disp.stdin.write(test)
+
+		except Exception as e:
+			print("Error Occured in testing rule: ", e)
+
 
 		# spliting all the given rule into objects of list
 		list_of_rules = self.all_rule.split('\n')
@@ -149,7 +173,6 @@ class whole:
 
 					# first changing stdou output into string then split it with '\n'
 					self.out = stdou.decode().split('\n')
-
 					# when you enter a rule and want to display with communicate it didnot display only what you need
 					# it displays all previous output together so how can you avoid this
 					#print(stdou)
@@ -197,16 +220,16 @@ class whole:
 					# print(list_of_rules)
 					# print("\n")
 					#
-					print("len of output", len(current_answer))
-					print(current_answer)
-					print("\n")
-					#print(output[len(output)-1])
-
-					print("len of all_answer", len(self.all_answer))
-					print(self.all_answer)
-					print("\n")
-					# # print("self.index", self.empty_index)
-					# # print("\n")
+					# print("len of output", len(current_answer))
+					# print(current_answer)
+					# print("\n")
+					# #print(output[len(output)-1])
+					#
+					# print("len of all_answer", len(self.all_answer))
+					# print(self.all_answer)
+					# print("\n")
+					# # # print("self.index", self.empty_index)
+					# # # print("\n")
 
 				# if the rule is all the previous rule asked by the user
 				# this is only just to write
@@ -222,18 +245,27 @@ class whole:
 	"""
 	def ghostRule(self, rule):
 		try:
-			#self.proc.stdin.write(rule)
 			# storing all the rule entered by the user to a global variable called all_rule
-			if((rule == b'')) :
+			ruletostring = rule.decode()
+			if((ruletostring == '')) :
 				#print("Please enter a rule")
 				pass
 			else:
-				if(str(rule)[2:3] != "("):
-					print("warning: possibly unbound variable: ", str(rule)[2:])
-				else:
-					self.all_rule = self.all_rule + str(rule) + '\n'
+				# if(str(rule)[2:3] != "("):
+				# 	print("warning: possibly unbound variable: ", str(rule)[2:])
+				if(('(ghost-parse-file') in ruletostring
+					 or ('(ghost-parse') in ruletostring):
+					self.all_rule = self.all_rule + ruletostring + '\n'
 					# creating displayPopen method to get the asked result
 					self.displayPopen()
+				else:
+					action = '(map cog-name (test-ghost \"{}\"))'.format(ruletostring)
+					self.all_rule = self.all_rule + action + '\n'
+					# creating displayPopen method to get the asked result
+					self.displayPopen()
+
+
+
 			# communicating the input with the sheme guile process
 			# the great problem i faced is cannot send input after starting communication
 			#c = self.proc.communicate(input=rule)
@@ -291,5 +323,6 @@ one.takeInput()
    	
 # if __name__ == '__main__':
 #     main()
+
 
 
